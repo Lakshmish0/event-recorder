@@ -53,8 +53,6 @@ jobs:
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload frontend artifact
         uses: actions/upload-pages-artifact@v4
