@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus } from 'lucide-react';
+import React from "react";
+import { Plus } from "lucide-react";
 
 interface HeroBannerProps {
   onAddEventClick: () => void;
@@ -11,7 +11,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onAddEventClick }) => {
       {/* Background Image with Warm Soft Overlay Gradient */}
       <div
         className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
-        style={{ backgroundImage: `url('/assets/hero_banner.png')` }}
+        style={{
+          backgroundImage: `url('${import.meta.env.BASE_URL}assets/hero_banner.png')`,
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
 

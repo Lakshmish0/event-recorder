@@ -104,7 +104,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           <div className="w-full pt-4">
             <div className="inline-block p-2 rounded-2xl bg-white/70 shadow-xs mb-4">
               <img
-                src="/assets/temple_illustration.png"
+                src={`${import.meta.env.BASE_URL}assets/temple_illustration.png`}
                 alt="Temple art"
                 className="h-36 sm:h-44 object-contain mx-auto"
               />
