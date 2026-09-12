@@ -13,6 +13,7 @@ export class ApiError extends Error {
 const getBaseUrl = (): string => {
   const envUrl =
     (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+    (import.meta.env.VITE_API_URL as string | undefined) ||
     (import.meta.env.BUN_PUBLIC_API_BASE_URL as string | undefined);
 
   if (envUrl) {

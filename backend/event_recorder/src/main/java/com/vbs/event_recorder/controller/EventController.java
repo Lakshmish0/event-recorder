@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000", "http://localhost:4173", "http://localhost:5174"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000", "http://localhost:4173", "http://localhost:5174", "https://lakshmish0.github.io"}, originPatterns = {"https://*.github.io"}, allowCredentials = "true")
 public class EventController {
 
     private final EventService eventService;
