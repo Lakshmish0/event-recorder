@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #fcf8f2;
+    --bg-card: #ffffff;
+    --primary: #c85a28;
+    --primary-hover: #b44f21;
+    --primary-light: #fbebe3;
+    --text-heading: #2d1f19;
+    --text-body: #6e5c54;
+    --text-muted: #9c8a82;
+    --border-color: #efe6da;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-heading);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #e2d7c9;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c8b7a4;
+}
+
+/* Soft shadows matching reference design */
+.shadow-soft {
+  box-shadow: 0 4px 20px -2px rgba(80, 50, 20, 0.04), 0 2px 6px -1px rgba(80, 50, 20, 0.02);
+}
+
+.shadow-card {
+  box-shadow: 0 10px 30px -4px rgba(90, 50, 20, 0.06), 0 4px 10px -2px rgba(90, 50, 20, 0.03);
+}
+
+.shadow-modal {
+  box-shadow: 0 25px 50px -12px rgba(50, 30, 10, 0.25);
+}
+
+/* Hide scrollbars for pill horizontal scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
