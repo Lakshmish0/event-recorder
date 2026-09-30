@@ -125,10 +125,10 @@ export const UpcomingEvents: React.FC<UpcomingEventsProps> = ({
                 key={ev.id}
                 className="flex items-center justify-between p-3 rounded-2xl bg-[#faf7f2] hover:bg-[#f5eee3] border border-[#efe6da] transition-all duration-200 group relative"
               >
-                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   {/* Date Block Badge */}
-                  <div className="flex flex-col items-center justify-center w-11 h-11 rounded-xl bg-white border border-[#efe6da] shadow-xs text-center shrink-0">
-                    <span className="text-[10px] font-bold text-[#8c7b75] uppercase tracking-wider leading-none">
+                  <div className="flex flex-col items-center justify-center w-11 h-11 rounded-xl bg-white border border-[#efe6da] shadow-2xs text-center shrink-0">
+                    <span className="text-[9px] font-extrabold text-[#9c8a82] uppercase tracking-wider leading-none">
                       {formatMonthShort(ev.startDate)}
                     </span>
                     <span className="text-sm font-extrabold text-[#2d1f19] leading-tight">
@@ -138,26 +138,31 @@ export const UpcomingEvents: React.FC<UpcomingEventsProps> = ({
 
                   {/* Category Icon Circle */}
                   <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${style?.bg || 'bg-orange-100'} ${style?.text || 'text-orange-600'}`}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-2xs ${style?.bg || 'bg-orange-100'} ${style?.text || 'text-orange-600'}`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
 
-                  {/* Title & Time */}
+                  {/* Title, Time & Location */}
                   <div className="space-y-0.5 min-w-0 flex-1">
                     <h4 className="text-xs sm:text-sm font-bold text-[#2d1f19] group-hover:text-[#c85a28] transition-colors truncate">
                       {ev.title}
                     </h4>
-                    <p className="text-[11px] text-[#8c7b75] truncate">
+                    <p className="text-[10px] sm:text-[11px] text-[#8c7b75] truncate font-medium">
                       {ev.startTime} – {ev.endTime}
                     </p>
+                    {ev.location && (
+                      <p className="text-[10px] text-[#9c8a82] truncate font-normal">
+                        {ev.location}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 {/* Status Badge */}
                 <div className="shrink-0 flex items-center gap-2 pl-2">
                   <span
-                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${
+                    className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${
                       ev.status === 'Upcoming'
                         ? 'bg-[#dcfce7] text-[#15803d] border-[#bbf7d0]'
                         : ev.status === 'Completed'
@@ -176,3 +181,4 @@ export const UpcomingEvents: React.FC<UpcomingEventsProps> = ({
     </div>
   );
 };
+

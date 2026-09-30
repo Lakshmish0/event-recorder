@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { EventProvider, useEvents } from './context/EventContext';
 import { Sidebar } from './components/layout/Sidebar';
@@ -13,6 +14,8 @@ import { EditEventModal } from './components/modals/EditEventModal';
 import { DeleteEventModal } from './components/modals/DeleteEventModal';
 
 function AppContent() {
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
   const {
     isAddModalOpen,
     closeAddModal,
@@ -27,13 +30,17 @@ function AppContent() {
 
   return (
     <div className="flex min-h-screen bg-[#fcf8f2] text-[#2d1f19]">
-      {/* Desktop / Tablet Navigation Sidebar */}
-      <Sidebar className="hidden md:flex" />
+      {/* Desktop Navigation Sidebar */}
+      <Sidebar
+        className="hidden lg:flex"
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen overflow-x-hidden">
         {/* Top Navigation Bar */}
-        <TopHeader />
+        <TopHeader onToggleSidebar={() => setIsMobileSidebarOpen((prev) => !prev)} />
 
         {/* Dynamic Page Content */}
         <main className="flex-1 p-4 sm:p-6 md:p-8">
@@ -79,6 +86,7 @@ function AppContent() {
     </div>
   );
 }
+
 
 export function App() {
   return (
