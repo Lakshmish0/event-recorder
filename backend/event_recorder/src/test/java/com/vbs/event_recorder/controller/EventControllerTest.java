@@ -8,7 +8,9 @@ import com.vbs.event_recorder.dto.QuickStatsDto;
 import com.vbs.event_recorder.exception.EventNotFoundException;
 import com.vbs.event_recorder.model.EventCategory;
 import com.vbs.event_recorder.model.EventStatus;
+import com.vbs.event_recorder.service.EventBroadcaster;
 import com.vbs.event_recorder.service.EventService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,10 @@ class EventControllerTest {
     @MockBean
     private EventService eventService;
 
+    @MockBean
+    private EventBroadcaster eventBroadcaster;
+
+
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private EventResponseDto responseDto;
@@ -61,8 +67,21 @@ class EventControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/events/stream returns text/event-stream")
+    void streamEvents_Returns200() throws Exception {
+        when(eventBroadcaster.createEmitter()).thenReturn(new org.springframework.web.servlet.mvc.method.annotation.SseEmitter());
+
+        mockMvc.perform(get("/api/events/stream"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-cache"))
+                .andExpect(header().string("X-Accel-Buffering", "no"))
+                .andExpect(header().string("Connection", "keep-alive"));
+    }
+
+    @Test
     @DisplayName("POST /api/events creates event and returns 201 CREATED")
     void createEvent_Returns201() throws Exception {
+
         EventRequestDto requestDto = EventRequestDto.builder()
                 .title("Special Event")
                 .category(EventCategory.SPECIAL_EVENT)

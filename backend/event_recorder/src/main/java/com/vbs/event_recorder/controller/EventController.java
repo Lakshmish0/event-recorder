@@ -4,11 +4,15 @@ import com.vbs.event_recorder.dto.EventRequestDto;
 import com.vbs.event_recorder.dto.EventResponseDto;
 import com.vbs.event_recorder.dto.QuickStatsDto;
 import com.vbs.event_recorder.model.EventCategory;
+import com.vbs.event_recorder.service.EventBroadcaster;
 import com.vbs.event_recorder.service.EventService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -18,9 +22,19 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+    private final EventBroadcaster eventBroadcaster;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, EventBroadcaster eventBroadcaster) {
         this.eventService = eventService;
+        this.eventBroadcaster = eventBroadcaster;
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamEvents(HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("X-Accel-Buffering", "no");
+        response.setHeader("Connection", "keep-alive");
+        return eventBroadcaster.createEmitter();
     }
 
     @PostMapping
@@ -77,3 +91,4 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 }
+

@@ -8,6 +8,8 @@ import com.vbs.event_recorder.model.Event;
 import com.vbs.event_recorder.model.EventCategory;
 import com.vbs.event_recorder.model.EventStatus;
 import com.vbs.event_recorder.repository.EventRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -16,15 +18,20 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class EventService {
 
-    private final EventRepository eventRepository;
+    private static final Logger log = LoggerFactory.getLogger(EventService.class);
 
-    public EventService(EventRepository eventRepository) {
+    private final EventRepository eventRepository;
+    private final EventBroadcaster eventBroadcaster;
+
+    public EventService(EventRepository eventRepository, EventBroadcaster eventBroadcaster) {
         this.eventRepository = eventRepository;
+        this.eventBroadcaster = eventBroadcaster;
     }
 
     public EventResponseDto createEvent(EventRequestDto dto) {
@@ -49,8 +56,13 @@ public class EventService {
                 .build();
 
         Event saved = eventRepository.save(event);
-        return EventResponseDto.fromEntity(saved);
+        EventResponseDto responseDto = EventResponseDto.fromEntity(saved);
+
+        tryBroadcast("CREATED", responseDto);
+
+        return responseDto;
     }
+
 
     public List<EventResponseDto> getAllEvents(EventCategory category) {
         List<Event> events;
@@ -172,7 +184,11 @@ public class EventService {
         }
 
         Event updated = eventRepository.save(existing);
-        return EventResponseDto.fromEntity(updated);
+        EventResponseDto responseDto = EventResponseDto.fromEntity(updated);
+
+        tryBroadcast("UPDATED", responseDto);
+
+        return responseDto;
     }
 
     public void deleteEvent(String id) {
@@ -180,6 +196,15 @@ public class EventService {
             throw new EventNotFoundException(id);
         }
         eventRepository.deleteById(id);
+        tryBroadcast("DELETED", Map.of("id", id));
+    }
+
+    private void tryBroadcast(String type, Object payload) {
+        try {
+            eventBroadcaster.broadcast(type, payload);
+        } catch (Exception e) {
+            log.error("Failed to broadcast SSE update: {}", e.getMessage(), e);
+        }
     }
 
     private EventStatus deriveStatus(Instant start, Instant end) {

@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Event, EventCategory, QuickStats } from '../types/event';
+import type { ConnectionStatus, SseEventPayload } from '../types/realtime';
 import { eventApi } from '../api/eventApi';
+import { useEventsRealtime } from '../hooks/useEventsRealtime';
 import { ToastContainer, type ToastMessage } from '../components/layout/Toast';
 
 interface EventContextType {
@@ -8,6 +10,8 @@ interface EventContextType {
   upcomingEvents: Event[];
   stats: QuickStats;
   isLoading: boolean;
+  isWakingUp: boolean;
+  realtimeStatus: ConnectionStatus;
   error: string | null;
   toasts: ToastMessage[];
   isAddModalOpen: boolean;
@@ -39,6 +43,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     completed: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isWakingUp, setIsWakingUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -59,6 +64,12 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     async (year?: number, month?: number, category?: EventCategory | 'All') => {
       setIsLoading(true);
       setError(null);
+
+      // Render cold-start detector: show "Waking up server..." if request takes > 3000ms
+      const coldStartTimer = setTimeout(() => {
+        setIsWakingUp(true);
+      }, 3000);
+
       try {
         const [fetchedEvents, upcomingList, quickStats] = await Promise.all([
           year !== undefined && month !== undefined
@@ -76,11 +87,58 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setError(message);
         console.error('Error fetching events in Context:', err);
       } finally {
+        clearTimeout(coldStartTimer);
+        setIsWakingUp(false);
         setIsLoading(false);
       }
     },
     []
   );
+
+  const refreshMetadata = useCallback(async () => {
+    try {
+      const [upcomingList, quickStats] = await Promise.all([
+        eventApi.getUpcomingEvents(4),
+        eventApi.getQuickStats(),
+      ]);
+      setUpcomingEvents(upcomingList);
+      setStats(quickStats);
+    } catch (e) {
+      console.error('Error refreshing metadata:', e);
+    }
+  }, []);
+
+  const handleRealtimeEventChange = useCallback((payload: SseEventPayload) => {
+    if (payload.type === 'CREATED') {
+      const newEv = payload.event as Event;
+      setEvents((prev) => {
+        if (prev.some((e) => e.id === newEv.id)) {
+          return prev;
+        }
+        return [...prev, newEv];
+      });
+      refreshMetadata();
+    } else if (payload.type === 'UPDATED') {
+      const updatedEv = payload.event as Event;
+      setEvents((prev) =>
+        prev.map((e) => (e.id === updatedEv.id ? updatedEv : e))
+      );
+      refreshMetadata();
+    } else if (payload.type === 'DELETED') {
+      const deletedId = (payload.event as { id: string }).id;
+      setEvents((prev) => prev.filter((e) => e.id !== deletedId));
+      refreshMetadata();
+    }
+  }, [refreshMetadata]);
+
+  const handleRealtimeReconnect = useCallback(() => {
+    refreshEvents();
+  }, [refreshEvents]);
+
+  const { status: realtimeStatus } = useEventsRealtime({
+    onEventChange: handleRealtimeEventChange,
+    onReconnect: handleRealtimeReconnect,
+  });
 
   useEffect(() => {
     refreshEvents();
@@ -88,21 +146,25 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const handleCreateEvent = async (eventData: Omit<Event, 'id' | 'status'>) => {
     const created = await eventApi.createEvent(eventData);
-    await refreshEvents();
+    // Optimistically insert to state if absent, then resync
+    setEvents((prev) => prev.some((e) => e.id === created.id) ? prev : [...prev, created]);
+    refreshMetadata();
     showToast('Event created successfully', 'success');
     return created;
   };
 
   const handleUpdateEvent = async (id: string, eventData: Partial<Event>) => {
     const updated = await eventApi.updateEvent(id, eventData);
-    await refreshEvents();
+    setEvents((prev) => prev.map((e) => (e.id === id ? updated : e)));
+    refreshMetadata();
     showToast('Event updated successfully', 'success');
     return updated;
   };
 
   const handleDeleteEvent = async (id: string) => {
     await eventApi.deleteEvent(id);
-    await refreshEvents();
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+    refreshMetadata();
     showToast('Event deleted', 'success');
   };
 
@@ -113,6 +175,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         upcomingEvents,
         stats,
         isLoading,
+        isWakingUp,
+        realtimeStatus,
         error,
         toasts,
         isAddModalOpen,

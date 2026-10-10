@@ -33,6 +33,9 @@ class EventServiceTest {
     @Mock
     private EventRepository eventRepository;
 
+    @Mock
+    private EventBroadcaster eventBroadcaster;
+
     @InjectMocks
     private EventService eventService;
 
@@ -55,7 +58,7 @@ class EventServiceTest {
     }
 
     @Test
-    @DisplayName("createEvent should save and return EventResponseDto")
+    @DisplayName("createEvent should save, return EventResponseDto and trigger broadcast")
     void createEvent_Success() {
         EventRequestDto requestDto = EventRequestDto.builder()
                 .title("Sunday Class")
@@ -78,6 +81,7 @@ class EventServiceTest {
         assertThat(result.getCategory()).isEqualTo(EventCategory.CLASS);
 
         verify(eventRepository, times(1)).save(any(Event.class));
+        verify(eventBroadcaster, times(1)).broadcast(eq("CREATED"), any(EventResponseDto.class));
     }
 
     @Test
@@ -148,7 +152,7 @@ class EventServiceTest {
     }
 
     @Test
-    @DisplayName("updateEvent should update existing event details")
+    @DisplayName("updateEvent should update existing event details and broadcast update")
     void updateEvent_Success() {
         EventRequestDto updateDto = EventRequestDto.builder()
                 .title("Updated Sunday Class")
@@ -161,6 +165,7 @@ class EventServiceTest {
 
         assertThat(result).isNotNull();
         verify(eventRepository, times(1)).save(any(Event.class));
+        verify(eventBroadcaster, times(1)).broadcast(eq("UPDATED"), any(EventResponseDto.class));
     }
 
     @Test
@@ -173,12 +178,14 @@ class EventServiceTest {
     }
 
     @Test
-    @DisplayName("deleteEvent should delete when id exists")
+    @DisplayName("deleteEvent should delete when id exists and broadcast deletion")
     void deleteEvent_Success() {
         when(eventRepository.existsById("evt-123")).thenReturn(true);
 
         eventService.deleteEvent("evt-123");
 
         verify(eventRepository, times(1)).deleteById("evt-123");
+        verify(eventBroadcaster, times(1)).broadcast(eq("DELETED"), any());
     }
 }
+
